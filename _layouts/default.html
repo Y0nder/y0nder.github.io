@@ -4,5 +4,10 @@
 		<title>{% if page.title %}{{ page.title }} - {% endif %}Yoncise</title>
 	</head>
 	<body>
+            {% include header %}
+
+            {{ content }}
+
+            {% include footer %}
 	</body>
 </html>
