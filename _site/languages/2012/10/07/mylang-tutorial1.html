@@ -1,0 +1,379 @@
+<!DOCTYPE HTML>
+<html>
+    <head>
+        <link rel="stylesheet" href="/css/pygments.css">
+        <title>Our own little computer language - Yoncise</title>
+    </head>
+    <body>
+        <header>
+    <ul>
+        <li><a href="/">Home</a></li>
+        <li><a href="/category">Category</a></li>
+        <li><a href="/about">About</a></li>
+    </ul>
+</header>
+
+
+        <div id="post">
+	<h1>Our own little computer language</h1>
+	<p class="meta">07 Oct 2012</p>
+	<p>Let&#8217;s write our own programming language. It&#8217;ll be fun and we will learn some key tools for processing structured data, performing semantic analysis, how to make a computer execute code, and all this using modern JavaScript.</p>
+
+<p>We will create five major components, each outlined in a separate article:</p>
+
+<ol>
+<li>Lexical analyzer</li>
+
+<li>Semantic parser</li>
+
+<li>Code generator</li>
+
+<li>Management and support</li>
+
+<li>Runtime library</li>
+</ol>
+
+<p>Today we will actually do two things: Define a first version of our language&#8217; lexicon, and write a lexical analyzer—or <em>lexer</em>—which performs <em>lexical analysis</em> of our language. From <a href='http://en.wikipedia.org/wiki/Lexical_analysis'>Wikipedia</a>:</p>
+
+<blockquote>
+<p>lexical analysis is the process of converting a sequence of characters into a sequence of tokens. A program or function which performs lexical analysis is called a lexical analyzer, lexer, or scanner.</p>
+</blockquote>
+
+<p>Our <em>lexer</em> will understand the basic building blocks of our language, similar to what a word and punctuation are in natural language text. Naturally we need to decide which these words and punctuation are. I think this is one of the most fun parts of writing your own language, as we are completely free to design our language.</p>
+
+<p>A lexer is usually the first part in the <em>evaluation pipeline</em>:</p>
+
+<p><em>Source code → Lexer → Parser → Code generator → Execution</em></p>
+
+<h2 id='language_lexicon_and_syntax'>Language lexicon and syntax</h2>
+
+<p>Let&#8217;s formulate the basic building blocks of our language. Before we write anything, let&#8217;s take a minute and think about what kind of language we wish to design. We don&#8217;t have to commit to anything yet, but it will be easier for us to make progress if we have an idea of what we are trying to accomplish.</p>
+
+<p>If we have the answers to the following to questions, our work will be easier.</p>
+
+<ol>
+<li>Are linebreaks significant?</li>
+
+<li>Is leading whitespace significant?</li>
+</ol>
+
+<p>A language like C does not care about whitespace at all, except for separating keywords, whilst a language like Python cares about both linebreaks and leading whitespace. Let&#8217;s say &#8220;yes&#8221; to both these questions. Our language might care about both linebreaks and leading whitespace.</p>
+
+<h3 id='syntax'>Syntax</h3>
+
+<p>Here&#8217;s a <a href='http://en.wikipedia.org/wiki/Backus%E2%80%93Naur_Form'>BNF</a>-style sketch of the language I have in mind for this tutorial. Feel free to make up your own version.</p>
+
+<pre><code>#!-none
+Expression           = ExpressionGroup | Number | Text | Path | List | Map
+ExpressionGroup      = &quot;(&quot; Expression* &quot;)&quot;
+Line                 = Linebreak Space*
+
+Whitespace           = Linebreak | Space
+Linebreak            = U+000A..U+000D | U+0085 | U+2028 | U+2029
+Space                = U+0009 | U+0020 | U+00A0 | U+180E | U+2000..U+200B
+                     | U+202F | U+205F | U+3000 | U+FEFF
+
+Number               = IntegerNumber | HexIntegerNumber | FractionalNumber
+IntegerNumber        = DecimalDigit+
+DecimalDigit         = 0..9
+HexIntegerNumber     = &quot;0x&quot; HexDigit+
+HexDigit             = 0..9 | A..F | a..f
+FractionalNumber     = DecimalDigit+ &quot;.&quot; DecimalDigit* FractionExponent?
+FractionalExponent   = (&quot;E&quot; | &quot;e&quot;) (&quot;-&quot; | &quot;+&quot;)? DecimalDigit+
+
+Text                 = &quot;&#39;&quot; TextCharacter* &quot;&#39;&quot;
+TextCharacter        = U+0021..U+0026
+                     | U+0028..U+005B
+                     | &quot;\&quot; TextEscCharacter
+                     | U+005D..U+FFEE
+TextEscCharacter     = &quot;\&quot; | &quot;&#39;&quot; | &quot;t&quot; | &quot;n&quot; | &quot;r&quot; | UnicodeValue
+UnicodeValue         = &quot;u&quot; HexDigit{4} | &quot;U&quot; HexDigit{8}
+
+Path                 = Symbol (&quot;.&quot; Symbol)*
+Symbol               = &lt;SymbolCharacter except 0..9&gt; SymbolCharacter*
+SymbolCharacter      = &lt;VisibleCharacter except SingleTerminator&gt;
+VisibleCharacter     = &lt;UnicodeCharacter except Whitespace | ControlCharacter&gt;
+UnicodeCharacter     = U+0000..U+FFFE
+ControlCharacter     = U+0000..U+0020 | U+007F..00A0 | U+FFEF..U+FFFF
+SingleTerminator     = &quot;(&quot; | &quot;)&quot; | &quot;.&quot; | &quot;:&quot; | &quot;[&quot; | &quot;]&quot; | &quot;{&quot; | &quot;}&quot;
+
+List                 = &quot;[&quot; Expression* &quot;]&quot;
+
+Map                  = &quot;{&quot; MapPair* &quot;}&quot;
+MapPair              = MapKey &quot;:&quot; Expression
+MapKey               = Symbol | Text</code></pre>
+
+<p>This format, usually referred to as BNF (although not actual strict BNF), is a way of expressing a syntax in terms of simple reductions. A quick guide to general BNF format:</p>
+
+<ul>
+<li><code>Foo = Bar | Baz</code> — &#8220;Foo&#8221; means either exactly one Bar or exactly one Baz.</li>
+
+<li><code>Bar?</code> — Zero or one &#8220;Bar&#8221; (a trailing &#8221;?&#8221; means &#8220;optional&#8221;)</li>
+
+<li><code>Bar*</code> — Zero or more &#8220;Bar&#8221; in succession</li>
+
+<li><code>Bar+</code> — One or more &#8220;Bar&#8221; in succession</li>
+
+<li><code>Bar{4}</code> — Exactly 4 &#8220;Bar&#8221; in succession</li>
+
+<li><code>A..F</code> — Exactly one of the items in the natural sequence (here, A, B, C, D, E or F)</li>
+
+<li><code>&quot;Bar&quot;</code> — The literal &#8220;Bar&#8221;</li>
+
+<li><code>(A | B) C</code> — &#8220;(&#8221; and &#8221;)&#8221; groups an anonymous reduction, here meaning &#8220;one of A or B, then one C&#8221;</li>
+
+<li><code>U+2192</code> — A Unicode character value (in this case the RIGHTWARDS ARROW codepoint)</li>
+
+<li><code>&lt;Foo except A and C&gt;</code> — Simplification of a reduction of &#8220;Foo&#8221;. Generally not recommented but useful in early stages of design.</li>
+</ul>
+
+<p>The above language is definitely incomplete (no functions or operators), but is a great start and to be honest it&#8217;s more than we need to get started. It would allow source code like this:</p>
+
+<pre><code>Hello = (bar baz) -&gt;
+  ה = can-haz [bar &#39;bar bara&#39;]
+  54.8 * ה</code></pre>
+
+<p>The first step to interpreting this code is to perform <em>lexical analysis</em>. As discussed earlier this means that a stream of bytes is the input and a stream of tokens is the result. Given our partial language specification, the above source should produce the following tokens:</p>
+
+<p><code>Symbol(&quot;Hello&quot;)</code>, <code>Symbol(&quot;=&quot;)</code>, <code>LeftParen</code>, <code>Symbol(&quot;bar&quot;)</code>, <code>Symbol(&quot;baz&quot;)</code>, <code>RightParen</code>, <code>Symbol(&quot;-&gt;&quot;)</code>, <code>Line(with 2 spaces)</code>,</p>
+
+<p><code>Symbol(&quot;ה&quot;)</code>, <code>Symbol(&quot;=&quot;)</code>, <code>Symbol(&quot;can-haz&quot;)</code>, <code>LeftSquareBracket</code>, <code>Symbol(&quot;bar&quot;)</code>, <code>Text(&quot;bar bara&quot;)</code>, <code>RightSquareBracket</code>, <code>Line(with 2 spaces)</code>,</p>
+
+<p><code>FractionalNumber(&quot;54.8&quot;)</code>, <code>Symbol(&quot;*&quot;)</code>, <code>Symbol(&quot;ה&quot;)</code>, <code>Line(with 0 spaces)</code></p>
+
+<p>With our current language lexicon and syntax we are able to formulate more complex structures that the above example, for instance:</p>
+
+<pre><code>Text.join = (list-of-text glue) -&gt;
+  result = nil
+  for text in list-of-text
+    result = if (result == nil) text
+             else result + glue + text
+  result
+
+(print (Text.join [&#39;Yet another&#39; &#39;Hello&#39; &#39;world&#39;] &#39; &#39;))</code></pre>
+
+<p>However, let&#8217;s stick to the previous simpler example for now.</p>
+
+<p>This is an excellent time to take a break and play around with some different imaginary language syntax. Remember that the <em>lexer</em> only needs to know about <em>what a word is</em> not <em>all the possible words</em> or even the sequence of words. When I say &#8220;words&#8221; here I mean the smallest building blocks of the syntax, or <em>tokens</em> as they are usually called. Let&#8217;s call each small unit of meaning a &#8220;token&#8221; from here on forward.</p>
+
+<h2 id='behold_a_lexer'>Behold, a lexer</h2>
+
+<p>Remember the <em>evaluation pipeline</em>?</p>
+
+<p><em>Source code → Lexer → Parser → Code generator → Execution</em></p>
+
+<p>Parsing and dealing with code is inherently a flowing system with no specific beginning or end. Sure, if we read the source from a file the file will have a start and it will have an ending, but let&#8217;s write a pipeline that is universal and has <em>incremental</em> functionality. In contrary to traditional <em>batch</em> lexers, an <em>incremental</em> lexer is able to iteratively analyze a continuous stream of characters and with little delay produce tokens on-the-fly. The tokens produced by our lexer will even be able to retain a persistent &#8220;snapshot&#8221; of the lexer&#8217;s state, for the abilitly to perform an incremental modification from a certain point. However, our lexer will merely make this possible but not directly provide this functionality.</p>
+
+<p>Given these requirements of being able to pause, resume and change source as we are producing tokens, there are not many implementation approaches available to us. In a language that has functions with local variables (usually implemented with a stack) a <em>batch lexer</em> can be efficiently implemented with a function-based <em>recursive decent</em> approach, where each token reduction (see our BNF-style language definition) is represented by a function that calls another function depending on the source character at hand.</p>
+
+<p>Here is pseudo-code implementing a recursive decent approach (this particular one is actually not recursive, but could very well become so), able to handle the <code>Text</code> part of our syntax:</p>
+
+<pre><code>class Lexer:
+  next_char = nil
+  input = &quot;&quot;
+  input_offs = 0
+
+  def ReadToken():
+    return this.ReadExpression()
+
+  def ReadExpression():
+    if this.next_char == &quot;&#39;&quot;:
+      this.ReadNextChar() # Consume &quot;&#39;&quot;
+      return this.ReadText()
+    else if ...
+
+  def ReadText():
+    token = {type = TEXT, value = &quot;&quot;}
+    prev_was_escape = false
+    while this.next_char:
+      if prev_was_escape:
+        prev_was_escape = false
+        token.value = concat(token.value, this.next_char)
+      else if this.next_char == &quot;\\&quot;:
+        prev_was_escape = true
+        continue
+      else if this.next_char == &quot;&#39;&quot;:
+        break
+      else:
+        token.value = concat(token.value, this.next_char)
+    this.ReadNextChar() # Consume &quot;&#39;&quot;
+    return token
+
+  def ReadNextChar():
+    this.next_char = this.input[this.input_offs++]
+
+L = Lexer()
+L.SetInput(&quot;&#39;Hello world&#39;&quot;)
+L.ReadToken()  # -&gt; {type=TEXT, value=&quot;Hello world&quot;}</code></pre>
+
+<p>This works fine for source input that is provided as one continuous sequence. If we were to pause a batch lexer like this, it would either imply a very complex and probably inefficient code which records and stuffs away the current call stack (essentially co-routines or green threads), or abort and retry from the beginning again later.</p>
+
+<p>Say the source <code>&#39;Hello world&#39;</code> arrives in two chunks and we try to apply the above batch lexer:</p>
+
+<pre><code>1. SetInput(&quot;&#39;Hello wo&quot;)
+2. ReadToken()  # -&gt; nil
+3. # Some time passes...
+4. SetInput(&quot;rld&#39;&quot;)
+5. ReadToken()  # -&gt; something not a string</code></pre>
+
+<p>When <code>ReadText</code> is called, <code>next_char</code> will be <code>nil</code> before the loop sees a terminating &#8221;&#8217;&#8221; character, and since all state is kept on the stack it will be lost when the function returns. Thus the second call at line 4 and 5 will begin reading with a reset state. No cigar.</p>
+
+<p>So we realized that the state of the lexer must be held by the lexer itself and in a way that can be represented persistently (e.g. as data in memory).</p>
+
+<p>Looking again at the pseudo code above for a batch lexer, we will look at what actually happens by unrolling the code:</p>
+
+<ol>
+<li>The lexer is asked to read the next token</li>
+
+<li>At this point the lexer has no context so the only thing it can do is to parse an &#8220;Expression&#8221;. Calling the &#8220;ReadExpression&#8221; function creates a new stack call entry. This is the state of what we are reading.</li>
+
+<li>Okay, so we are reading an expression. Since we have no previous information about where in an expression we are, let&#8217;s look at the current character of the source code (it&#8217;s &#8221;&#8217;&#8220;)</li>
+
+<li>Since the character is a &#8221;&#8217;&#8221; we know that a &#8220;Text&#8221; token is coming up. Call &#8220;ReadText&#8221; to enter a state of &#8220;reading text&#8221;.</li>
+
+<li>Create a new token and store it into the variable <code>token</code> that is kept on the stack. We need to keep track of the previous character since &#8220;\c&#8221; and &#8220;c&#8221; means different things. This is also kept as a variable <code>prev_was_escape</code> living on the stack (or in the function&#8217;s scope, depending on the language we write this in, but whatever).</li>
+
+<li>Look at the next character, look at <code>prev_was_escape</code> and append <code>next_char</code> to the token value as we read.</li>
+</ol>
+
+<p>Essentially each step is a certain code branch that flow into other code branches depending on certain branch-related values. So let&#8217;s move those values into a &#8220;lexer context&#8221; object which we instead pass around between readings.</p>
+
+<p>Let&#8217;s rewrite the previous batch lexer using this strategy.</p>
+
+<pre><code>def Lexer():
+  return {input = &quot;&quot;, input_offs = 0, token = nil, next_char = nil}
+
+def ReadToken(L):
+  result = nil
+  while L.next_char:
+    if L.token == nil:
+      # Entry state
+      if L.next_char == &quot;&#39;&quot;:
+        L.token = {type = TEXT, value = &quot;&quot;, prev_was_escape = false}
+        ReadNextChar(L) # Consume &quot;&#39;&quot;
+      else:
+        ...
+    else if L.token.type == TEXT:
+      if L.token.prev_was_escape:
+        L.token.prev_was_escape = false
+        token.value = concat(token.value, L.next_char)
+      else if L.next_char == &quot;\\&quot;:
+        L.token.prev_was_escape = true
+      else if L.next_char == &quot;&#39;&quot;:
+        result = L.token
+        delete result.prev_was_escape
+        L.token = nil
+      else:
+        token.value = concat(token.value, L.next_char)
+      ReadNextChar(L)
+    else:
+      ...
+  return result
+
+L = Lexer()
+SetInput(L, &quot;&#39;Hello wo&quot;)
+ReadToken(L)  # -&gt; nil
+SetInput(L, &quot;rld&#39;&quot;)
+ReadToken(L)  # -&gt; {type=TEXT, value=&quot;Hello world&quot;}</code></pre>
+
+<p>We simply moved the state into a structure (referenced to as <code>L</code> above) which we pass around instead of storing the state values on the stack. The function calls were replaced by logical code branches. The <code>token</code> structure above is used to carry token code-branch specific state. This design not only performs better (in most languages) but it also meets our requirements of being able to be paused and resumed.</p>
+
+<h3 id='a_javascript_implementation'>A JavaScript implementation</h3>
+
+<p>For this tutorial article series I&#8217;ve chosen JavaScript as it&#8217;s easily accessible, a very popular language, has built-in Unicode support (good since we are to be analyzing text) and runs almost anywhere.</p>
+
+<p>Before writing or running any code, install Node.js — a free, modern and efficient JavaScript environment that let&#8217;s you run JavaScript programs in a terminal session (just like Python, Ruby, Perl or any other regular program). It takes just a minute to download and install, so don&#8217;t hesitate: <a href='http://nodejs.org/download/'>nodejs.org/download</a>.</p>
+
+<p>Now, let&#8217;s have a look at the lexer. It&#8217;s easiest if you <a href='https://github.com/rsms/prog-lang-tutorial.git'>clone or fork the Git repository</a> at <a href='https://github.com/rsms/prog-lang-tutorial'>https://github.com/rsms/prog-lang-tutorial</a> and have a look in the &#8220;01-lexer&#8221; directory. There is a file called <em><a href='https://github.com/rsms/prog-lang-tutorial/blob/master/01-lexer/lexer-demo.js'>lexer-demo.js</a></em> — a simple program that imports our lexer and applies some sample source. Essentially it imports the Lexer module and does something like this:</p>
+
+<pre><code>var L = Lexer(), token;
+L.appendSource(&#39;Foo (bar baz)&#39;);
+while ((token = L.next(source_ended))) {
+  console.log(Lexer.TOKEN_NAMES[token.type], token);
+}</code></pre>
+
+<p>The interesting part is in the <em><a href='https://github.com/rsms/prog-lang-tutorial/blob/master/01-lexer/lib/mylang/Lexer.js'>lib/mylang/Lexer.js</a></em> file, so let&#8217;s quickly look through the different sections of the Lexer code.</p>
+
+<pre><code>// Create a new Lexer object.
+function Lexer() {
+  return Object.create(Lexer.prototype, ...</code></pre>
+
+<p>This function creates new Lexer objects with initial state. We call this function each time we start reading a new source stream.</p>
+
+<p>Next up is a set of token definitions. This is where we define each of the different token types that our language is constructed from.</p>
+
+<pre><code>var LINE                 = deftok(&#39;LINE&#39;);
+var LEFT_PAREN           = deftok(&#39;LEFT_PAREN&#39;,           &#39;(&#39;);
+var RIGHT_PAREN          = deftok(&#39;RIGHT_PAREN&#39;,          &#39;)&#39;);
+var LEFT_SQUARE_BRACKET  = deftok(&#39;LEFT_SQUARE_BRACKET&#39;,  &#39;[&#39;);
+var RIGHT_SQUARE_BRACKET = deftok(&#39;RIGHT_SQUARE_BRACKET&#39;, &#39;]&#39;);
+var LEFT_CURLY_BRACKET   = deftok(&#39;LEFT_CURLY_BRACKET&#39;,   &#39;{&#39;);
+var RIGHT_CURLY_BRACKET  = deftok(&#39;RIGHT_CURLY_BRACKET&#39;,  &#39;}&#39;);
+var FULL_STOP            = deftok(&#39;FULL_STOP&#39;,            &#39;.&#39;);
+var COLON                = deftok(&#39;COLON&#39;,                &#39;:&#39;);
+var DECIMAL_NUMBER       = deftok(&#39;DECIMAL_NUMBER&#39;);
+var HEX_NUMBER           = deftok(&#39;HEX_NUMBER&#39;);
+var FRACTIONAL_NUMBER    = deftok(&#39;FRACTIONAL_NUMBER&#39;);
+var SYMBOL               = deftok(&#39;SYMBOL&#39;);
+var TEXT                 = deftok(&#39;TEXT&#39;);</code></pre>
+
+<p>The <code>deftok</code> helper function simply assigns the token a unique number identifier and if a second argument is given, associates that token id with a single character value (this is stored in the internal map <code>SINGLE_TOKENS</code>). The Lexer will be able to look up a character value in this map and if it&#8217;s there, immediately terminate any currently reading token. This is useful for single-character tokens which might appear immediately before or after for instance a symbol.</p>
+
+<p>The Lexer prototype is the prototype of the object returned by the <code>Lexer()</code> function:</p>
+
+<pre><code>Lexer.prototype = {</code></pre>
+
+<p><code>appendSource</code> is used to set/append source input:</p>
+
+<pre><code>  // Add input source.
+  // The `chunk` object need to have the following properties:
+  //
+  //  .charCodeAt(N)   A function that return the Unicode character value at
+  //                   position N, or a NaN if N is out of bounds.
+  //
+  //  .substring(A, B) A function that returns another chunk object that
+  //                   represents the Unicode characters in the range [A,B)
+  //
+  appendSource: function (chunk) { ...</code></pre>
+
+<p><code>makeToken</code> is mean to be used only internally by other Lexer functions. This is called every time a new token is being read:</p>
+
+<pre><code>  // Create a new token of `type` based on the internal source location state
+  makeToken: function (type) { ...</code></pre>
+
+<p><code>flushToken</code> is also meant as an internal function which is called each time a token is about to be returned as a result from the <code>next</code> function:</p>
+
+<pre><code>  // Returns the current token and clears the &quot;reading token&quot; state. This is
+  // an appropriate place to perform some post processing on tokens before
+  // they are returned to the caller of `next()`. If `terminated_by_eos` is
+  // true, the token was terminated by end of source.
+  flushToken: function (terminated_by_eos) { ...</code></pre>
+
+<p><code>next</code> is called to give control to the lexer and returns either when the lexer has read a token (a token is returned), when an error occurs (an exception is thrown) or the input source ended (null is returned).</p>
+
+<pre><code>  // Reads the next token. If `source_ended` is true, then no more source is
+  // expected to arrive and thus EOS acts as a token terminator.
+  next: function (source_ended) { ...</code></pre>
+
+<p>That&#8217;s it for a summary of the Lexer design. I suggest you look through the code which is thoroughly documented.</p>
+
+<p>I&#8217;ve left one part unimplemented for you to write: Reading Text literals. Run the <code>lexer-demo.js</code>:</p>
+
+<pre><code>#!-none
+$ node lexer-demo.js
+read_tokens(L)
+L.next() -&gt; SYMBOL &#39;Hello&#39; at 0:0
+L.next() -&gt; SYMBOL &#39;=&#39; at 0:6
+...
+Error: Lesson 1: Implement reading of Text tokens
+;)</code></pre>
+
+<p>Again, the source is available at <a href='https://github.com/rsms/prog-lang-tutorial'>https://github.com/rsms/prog-lang-tutorial</a>.</p>
+
+<p>In the next article we will look at how semantic parsing fits into the evaluation pipeline.</p>
+</div>
+
+
+        
+    </body>
+</html>

@@ -1,0 +1,284 @@
+<!DOCTYPE HTML>
+<html>
+    <head>
+        <link rel="stylesheet" href="/css/pygments.css">
+        <title>An update on the programming language Move - Yoncise</title>
+    </head>
+    <body>
+        <header>
+    <ul>
+        <li><a href="/">Home</a></li>
+        <li><a href="/category">Category</a></li>
+        <li><a href="/about">About</a></li>
+    </ul>
+</header>
+
+
+        <div id="post">
+	<h1>An update on the programming language Move</h1>
+	<p class="meta">30 Jul 2011</p>
+	<img src='http://movelang.org/res/logo.png' align='right' width='256' />
+<p>Today Move has evolved &#8211; from what was first released on March 2, 2011 &#8211; over nine releases, making the language even simpler and listening to user feedback.</p>
+
+<h2 id='the_web_is_the_future'>The web is the future</h2>
+
+<p>It&#8217;s inevitable. The web (well, stuff over HTTP viewed in a web browser) is the app platform of tomorrow. Move provides a <em>normalized environment</em>, a uniform library with a standard CommonJS module system. This is actually a huge deal since what traditionally incurred the feeling that JavaScript was a second-class programming environment, should be hugely contributed to the vast number of bugs, API differences and library discrepancies implied by the web browser landscape. Although the API of today&#8217;s web browsers are generally coherent, there are still a bunch of differences your everyday JavaScript web browser engineer need to &#8211; painfully &#8211; be aware of and feature-test for.</p>
+
+<p>For example, a common thing to do is to iterate over items in a list:</p>
+
+<pre><code>someArray.forEach ^(item, i) {
+  print i+&#39;:&#39;, item
+}
+someObject.forEach ^(key, value) {
+  print key+&#39;:&#39;, value
+}</code></pre>
+
+<p>On modern browsers, that code will be very fast as it&#8217;s implemented natively.</p>
+
+<p>In JavaScript, you would need to do some feature testing&#8230;</p>
+
+<pre><code>var i, key, apply = function (item, i) {
+  console.log(i+&#39;:&#39;, item);
+};
+if (typeof Array.prototype.forEach === &#39;function&#39;) {
+  someArray.forEach(apply);
+} else {
+  for (i = 0; i &lt; someArray.length; ++i)
+    apply.call(someArray, someArray[i], i);
+}
+var HOP;
+if (typeof Object.prototype.hasOwnProperty === &#39;function&#39;) {
+  HOP = Object.prototype.hasOwnProperty;
+} else {
+  HOP = function (name) { return this[name] !== undefined; };
+}
+apply = function (key, value) {
+  console.log(key+&#39;:&#39;, value);
+};
+for (key in someObject) {
+  if (HOP.call(someObject, key))
+    apply.call(someObject, key, someObject[value]);
+}</code></pre>
+
+<p>I would chose the Move way any day of the week.</p>
+
+<p>&#8220;But I&#8217;ll just use jQuery&#8221; you say and wonder if this normalization thingy in Move is just yet another library. No. Move provides a <a href='http://www.ecma-international.org/publications/standards/Ecma-262.htm'>ES5</a> environment, equivalent to a modern version of Chrome or Safari. As time progress, the ES5 standard will be completely implemented on all platforms. When that happens you no longer need a 3rd party library (theoretically speaking). You&#8217;re <em>investing</em> in learning the future standard instead of the API of a 3rd party compatibility library.</p>
+
+<p>Note that some features of ES5 requires compiler, vm or otherwise host-level support in older browsers, which is thus impossible to &#8220;glue together&#8221;. On the topic, <a href='http://es5.github.com/'>Annotated ECMAScript 5</a> is a great and accessible documentation of the ES5 standard.</p>
+
+<p>Another pretty awesome feature of Move is that you get a standard CommonJS module system. That basically means that slicing up your code into modules is easy peacy:</p>
+
+<pre><code>import foo, bar
+x = foo.someFunction()
+y = bar x
+export z = y * x</code></pre>
+
+<p>Part of the Move language are the two keywords <em>import</em> and <em>export</em>. <em>Import</em> is a convenience preprocessor for the CommonJS <em>require</em> function.</p>
+
+<pre><code>import foo</code></pre>
+
+<p>Compiles to:</p>
+
+<pre><code>foo = require &#39;foo&#39;</code></pre>
+
+<p>The <em>export</em> keyword similarly converts a statement like:</p>
+
+<pre><code>export foo = 5</code></pre>
+
+<p>To:</p>
+
+<pre><code>exports.foo = foo = 5</code></pre>
+
+<p>The <code>exports</code> variable is part of the CommonJS module specification and represents the API that your module (source file) provides (exports) to other source code.</p>
+
+<p>It&#8217;s completely optional to use these convenience keywords.</p>
+
+<p>Here&#8217;s a more complete example of modules in a web browser environment:</p>
+
+<pre><code>&lt;script src=&quot;http://movelang.org/move.js&quot;&gt;&lt;/script&gt;
+&lt;script type=&quot;text/move&quot; module=&quot;bar&quot;&gt;
+import foo, capitalize
+export sayHello = ^(name) {
+  print foo.makeHello capitalize name
+}
+&lt;/script&gt;
+&lt;script type=&quot;text/move&quot; src=&quot;capitalize.mv&quot;&gt;&lt;/script&gt;
+&lt;script type=&quot;text/move&quot; module=&quot;foo&quot;&gt;
+export makeHello = ^(name) { &#39;Hello &#39;+name+&#39;!&#39; }
+&lt;/script&gt;
+&lt;script type=&quot;text/move&quot;&gt;
+import bar
+bar.sayHello &#39;worlds&#39;
+&lt;/script&gt;</code></pre>
+
+<h2 id='slicing_and_dicing_collections'>Slicing and dicing collections</h2>
+
+<p>Move falls into the category of &#8220;end-user data&#8221; programming languages (I just made that up), thus dealing with text and lists of items is a very common task. Move provides a slice syntax which should come natural to e.g. Python programmers:</p>
+
+<pre><code>print &quot;hello&quot;[1:3]  # &quot;el&quot;
+
+x = [1,2,3,4]
+print x[1:3]        # [2, 3]
+x[1:3] = 9
+print x             # [1, 9, 4]
+x[1:] = [9, 10]
+print x             # [1, 9, 10]</code></pre>
+
+<p>Since Move is heavily based around the core concept of first-class functions, this slice syntax compiles to simple function calls:</p>
+
+<pre><code>foo[1:3]
+foo[1:3] = 9
+foo[1:] = 9</code></pre>
+
+<p>Which is equivalent to:</p>
+
+<pre><code>foo.slice 1, 3
+foo._move_setSlice 1, 3, 9
+foo._move_setSlice 1, undefined, 9</code></pre>
+
+<p>This means that <em>any object</em> can support slices by simply implementing both or one of <code>slice(startIndex, endIndex) → list</code> (getter) and <code>_move_setSlice(startIndex, endIndex, value) → list</code>.</p>
+
+<h2 id='embedded_html_and_compiler_preprocessor_api'>Embedded HTML and compiler preprocessor API</h2>
+
+<p>This is a pretty awesome feature: HTML literals.</p>
+
+<pre><code>url = &quot;http://movelang.org/res/logo.png&quot;
+img = &lt;img src=&quot;{url}&quot;/&gt;
+img.width = 500
+document.body.appendChild img</code></pre>
+
+<p>With this feature comes the ability to plug in preprocessors to the Move compiler. Embedded HTML (or EHTML for short) is currently the only plugin that ships with Move, but the preprocessor API is pretty simple: Create a module which exports a <em>process</em> function <code>process(string moveSource, object compilerOptions) → string moveSource</code>:</p>
+
+<pre><code>export process = ^(source, options) {
+  # Transform source
+  source
+}</code></pre>
+
+<p>Then the preprocessor need to be registered with the compiler:</p>
+
+<pre><code>move.preprocessors[&#39;my-preprocessor&#39;] = process</code></pre>
+
+<p>Finally, specifying the preprocessor when compiling:</p>
+
+<pre><code>move.compile {source:source, preprocess:[&#39;ehtml&#39;, &#39;my-preprocessor&#39;]}</code></pre>
+
+<p>The order of which preprocessors are specified in the &#8220;preprocess&#8221; argument to <code>move.compile</code> decides which is applied first. By default Move will enable the &#8220;ehtml&#8221; (Embedded HTML) preprocessor by default when run in a en environment that provides a DOM (i.e. a web browser).</p>
+
+<h2 id='classes__object_factories_with_prototype_chains'>Classes &#8211; Object factories with prototype chains</h2>
+
+<p>Since the birth of Move &#8220;class definition&#8221; has been a common feature request: Ability to define prefab prototype chains.</p>
+
+<p>Move leans toward the &#8220;good parts of JavaScript&#8221;, thus the &#8220;new&#8221; keyword (added to JavaScript simply to make it look like Java &#8211; oh politics) should be avoided. <code>Object.create</code> is the recommended way of creating new objects based on custom prototypes. Still, <code>Object.create</code> is limited to creation (which is a good thing). From the eyes of <code>Object.create</code>, there&#8217;s no notion of constructor, or rather; there&#8217;s no difference between a constructor function or any other function.</p>
+
+<p>As <a href='http://yuiblog.com/blog/2006/11/13/javascript-we-hardly-new-ya/'>Douglas Crockford states</a> it:</p>
+
+<blockquote>
+<p>JavaScript is a prototypal language, but it has a new operator that tries to make it look sort of like a classical language. That tends to confuse programmers, leading to some problematic programming patterns.</p>
+</blockquote>
+
+<p>Avoid the &#8220;new&#8221; keyword and use literals or factory functions instead.</p>
+
+<p>Say hello to Move&#8217;s <em>class</em> construction function:</p>
+
+<pre><code>Animal = class {
+  age: 1,
+  toString: ^{ &quot;I&#39;m a &quot;+@kind }
+}
+
+elephant = Animal {kind:&quot;slow and kind fella&quot;}
+print Text elephant  # &quot;I&#39;m a slow and kind fella&quot;
+print elephant.age   # 1</code></pre>
+
+<p>In the above case we define the factory <em>Animal</em>, having a prototype with two values: <em>age</em> and <em>toString</em>. The <em>Animal</em> factory produce objects with a prototype of <em>Animal.prototype</em>.</p>
+
+<p>We can create another factory which prototype inherit from the <em>Animal</em> prototype:</p>
+
+<pre><code>Cat = class Animal, {
+  constructor: ^(name, age) {
+    @kind = &quot;furry little creature&quot;
+    name &amp;&amp; (@name = name)
+    age &amp;&amp; (@age = age)
+  },
+  toString: ^{
+    s = Animal.prototype.toString.call this
+    s + &quot; named &quot; + @name
+  }
+}
+
+cat = Cat {name:&quot;Busta&quot;, age:10}
+print Text cat  # &quot;I&#39;m a furry little creature named Busta&quot;
+print cat.age   # 10</code></pre>
+
+<p>Note that we defined a <em>constructor</em> function on the prototype. In this case, calls to the factory will invoke that function (instead of the implicit and generic <em>create</em> function).</p>
+
+<p>Constructor functions (or you could think of them as initialization functions) need not be defined on subclasses in order to invoke a superclass&#8217;s constructor:</p>
+
+<pre><code>Zelda = class Cat, {
+  name: &quot;Zelda&quot;,
+  toString: ^{ &quot;I&#39;m awesome and my name is &quot;+@name }
+}</code></pre>
+
+<p>Since the above <em>Zelda</em> prototype does not define a constructor, the parent prototype&#8217;s constructor will be called (that is, <em>Cat.prototype.constructor</em>) when the <em>Zelda</em> factory is invoked</p>
+
+<pre><code>zelda = Zelda {age:5}
+print Text zelda  # &quot;I&#39;m awesome and my name is Zelda&quot;
+print zelda.age   # 5</code></pre>
+
+<p>As usual with Move, <code>class</code> is simply a runtime function (<code>__move.runtime.__class</code>).</p>
+
+<p>Actually, the <em>Zelda</em> factory and prototype chain can be described (and traversed) like this:</p>
+
+<pre><code>Zelda                                # [function]
+Zelda.prototype                      # { name:&quot;Zelda&quot;, toString:[function] }
+Zelda.prototype.prototype            # -&gt; Cat.prototype
+            Cat.prototype            # { constructor:[function], toString:[function] }
+            Cat.prototype.prototype  # -&gt; Animal.prototype
+                   Animal.prototype  # { age:1, toString:[function] }
+                   Animal.prototype.prototype  # Object.prototype</code></pre>
+
+<h2 id='helpful_command_line_interface'>Helpful command line interface</h2>
+
+<p>The <code>move</code> CLI tool (a program with a text interface) acts both as an operating system entry-point for Move programs run directly on a system and as a utility for dealing with and processing Move code.</p>
+
+<p>Run a Move program:</p>
+
+<pre><code>move foo.mv
+move run foo.mv</code></pre>
+
+<p>Run Move code from <em>stdin</em>:</p>
+
+<pre><code>echo &#39;print &quot;hello&quot;&#39; | move run
+move run &lt; foo.mv</code></pre>
+
+<p>Output the parser&#8217;s Abstract Syntax Tree that represents your code, as JSON:</p>
+
+<pre><code>move compile --ast foo.mv</code></pre>
+
+<p>Show the JavaScript generated by the compiler:</p>
+
+<pre><code>move compile foo.mv</code></pre>
+
+<p>Show the list of global options and available commands:</p>
+
+<pre><code>move -h
+move --help</code></pre>
+
+<p>Show documentation for a specific command (&#8220;compile&#8221; in this example):</p>
+
+<pre><code>move help compile</code></pre>
+
+<p>Create a stand-alone web-browser compatible JavaScript file from one or more source files:</p>
+
+<pre><code>move compile --bundle-standalone foo.mv bar.mv leet.js
+move compile --bundle-standalone --basedir lib lib/*.{mv,js}
+move compile --bundle-standalone --basedir lib --output bundle.js lib/*.{mv,js}</code></pre>
+
+<p>This article and examples in it assumes the latest release of Move at the time of publishing this (0.4.2).</p>
+
+<p>More information on Move can be found at <a href='http://movelang.org/'>movelang.org</a></p>
+</div>
+
+
+        
+    </body>
+</html>
