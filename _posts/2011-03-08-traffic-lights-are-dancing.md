@@ -1,4 +1,5 @@
 ---
+category: carrer
 layout: post
 title: Traffic lights are dancing
 tags: apple, ux

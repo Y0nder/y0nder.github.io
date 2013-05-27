@@ -1,4 +1,5 @@
 ---
+category: carrer
 title: Designing a modern web-based application — Dropular.net
 layout: post
 tags: dropular, programming

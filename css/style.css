@@ -1,0 +1,12 @@
+#nav ul {
+    display: none;
+}
+
+#nav li {
+    float: left;
+    list-style: none;
+}
+
+#nav li:hover > ul {
+    display: block;
+}

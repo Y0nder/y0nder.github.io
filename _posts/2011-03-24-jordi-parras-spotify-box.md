@@ -1,4 +1,5 @@
 ---
+category: carrer
 title: Spotify box by Jordi Parra
 layout: post
 tags: spotify, ux

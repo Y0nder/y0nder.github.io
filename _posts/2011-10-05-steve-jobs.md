@@ -1,4 +1,5 @@
 ---
+category: carrer
 title: February 24, 1955 – October 5, 2011
 layout: post
 tags: apple, stevejobs

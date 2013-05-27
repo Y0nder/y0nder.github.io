@@ -1,4 +1,5 @@
 ---
+category: carrer
 layout: post
 title: "Move — a programming language"
 disqus_comments: true

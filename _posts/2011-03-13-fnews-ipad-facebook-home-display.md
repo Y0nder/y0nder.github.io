@@ -1,4 +1,5 @@
 ---
+category: carrer
 layout: post
 title: An expensive photo frame
 tags: apple, ipad, facebook

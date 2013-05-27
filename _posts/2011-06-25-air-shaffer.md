@@ -1,4 +1,5 @@
 ---
+category: carrer
 title: Air Shaffer
 layout: post
 tags: sanfrancisco

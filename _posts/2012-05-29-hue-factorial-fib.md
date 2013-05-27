@@ -1,4 +1,5 @@
 ---
+category: carrer
 title: "Factorial and Fib in Hue"
 layout: post
 tags: programming
