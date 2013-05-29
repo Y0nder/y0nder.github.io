@@ -1,12 +1,5 @@
-#nav ul {
-    display: none;
-}
-
-#nav li {
-    float: left;
-    list-style: none;
-}
-
-#nav li:hover > ul {
-    display: block;
+* {
+    margin: 0;
+    padding: 0;
+    position: relative;
 }
