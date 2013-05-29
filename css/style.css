@@ -82,6 +82,7 @@ main {
     color: #222;
     float: left;
     font-size: medium;
+    line-height: 24px;
     margin: 12px 24px;
     text-decoration: none;
 }
@@ -92,9 +93,10 @@ main {
 
 #home .date {
     font-size: small;
+    line-height: 24px;
     color: #999;
     float: right;
-    margin: 12px;
+    margin: 12px 24px;
 }
 
 #pagination {
