@@ -31,14 +31,16 @@ nav ul li a {
     font-size: 13px;
     line-height: 27px;
     font-weight: bold;
-}
-
-nav ul li > a {
     color: #bbb;
     text-decoration: none;
     display: block;
     padding: 2px 10px 0px;
 }
+
+nav .current {
+    color: #fff;
+}
+
 
 nav ul li:hover > ul {
     display: block;
@@ -62,6 +64,7 @@ nav ul li ul {
 
 main {
     display: block;
+    word-wrap: break-word;
     width: 800px;
     background: #fff;
     margin: 24px auto;
@@ -119,8 +122,61 @@ main {
     padding: 24px 40px;
 }
 
+#category:after {
+    content: "";
+    clear: both;
+    display: block;
+}
+#category ul {
+    margin: 0;
+    padding: 0;
+}
+
+#category ul li {
+    list-style: none;
+    clear: both;
+}
+
+#category .category_name {
+    clear: both;
+    background: #2d2d2d;
+    font-size: 13px;
+    line-height: 27px;
+    font-weight: bold;
+    color: #fff;
+    text-decoration: none;
+    display: block;
+    padding: 1px 10px;
+}
+
+#category ul li a {
+    float: left;
+    color: #222;
+    line-height: 24px;
+    font-size: medium;
+    margin: 12px 24px;
+    text-decoration: none;
+}
+
+#category ul li a:hover {
+    text-decoration: underline;
+}
+
+#category ul li + li {
+    border-top: 1px dashed #eee;
+}
+
+#category .date {
+    font-size: small;
+    line-height: 24px;
+    color: #999;
+    float: right;
+    margin: 12px 24px;
+}
+
 footer {
     text-align: center;
     font-size: small;
     color: #999;
+    margin: 0 0 24px;
 }
