@@ -78,6 +78,10 @@ main {
     clear: both;
 }
 
+#home ul li + li {
+    border-top: 1px dashed #eee;
+}
+
 #home ul li a {
     color: #222;
     float: left;
