@@ -1,11 +1,7 @@
 body {
     margin: 0;
-    font-family: arial,sans-serif;
+    font-family: arial, "Microsoft Yahei", sans-serif;
     background: url('/res/bg.jpg');
-}
-
-img {
-    width: 100%;
 }
 
 nav {
@@ -143,15 +139,16 @@ main {
 
 #category .category_name {
     clear: both;
-    background: #2d2d2d;
-    font-size: 13px;
-    line-height: 28px;
-    font-weight: bold;
-    color: #fff;
-    text-decoration: none;
-    padding: 1px 24px;
+    font-size: large;
+    font-style: italic;
+    color: #444;
     float: left;
-    margin-left: -15px;
+    border-left: 3px solid #2d2d2d;
+    padding-left: 10px;
+}
+
+#category ul + .category_name {
+    margin-top: 24px;
 }
 
 #category ul li a {
@@ -177,6 +174,39 @@ main {
     color: #999;
     float: right;
     margin: 12px 24px;
+}
+
+article {
+    padding: 0 24px;
+}
+
+article .title {
+    font-size: 240%;
+    text-align: center;
+}
+
+article .date {
+    font-style: italic;
+    color: #222;
+    text-align: center;
+    text-indent: 0;
+}
+
+article p {
+    text-indent: 1em;
+}
+
+article blockquote {
+    font-style: italic;
+}
+
+article img {
+    max-width: 100%;
+}
+
+article pre {
+    margin: 0;
+    padding: 10px;
 }
 
 footer {
