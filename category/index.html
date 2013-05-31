@@ -4,7 +4,7 @@ current: category
 ---
 <div id="category">
     {% for category in site.categories %}
-    <a class="category_name" name="{{ category[0] }}">{{ category[0] }}</a>
+    <a class="category_name" id="{{ category[0] }}">{{ category[0] }}</a>
     <ul>
     {% for post in category[1] %}
         <li>
