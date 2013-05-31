@@ -34,7 +34,7 @@ nav ul li a {
     color: #bbb;
     text-decoration: none;
     display: block;
-    padding: 2px 10px 0px;
+    padding: 2px 10px 0;
 }
 
 nav .current {
