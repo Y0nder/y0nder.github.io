@@ -67,13 +67,14 @@ main {
     word-wrap: break-word;
     width: 960px;
     background: #fff;
-    margin: 24px auto;
+    margin: 24px auto 0;
+    padding: 24px 0;
     box-shadow: 0px 0px 8px rgba(0,0,0,0.15);
 }
 
 #home ul {
     margin: 0;
-    padding: 24px 0 0 0;
+    padding: 0;
 }
 
 #home ul li {
@@ -110,7 +111,7 @@ main {
     clear: both;
     text-align: center;
     font-size: small;
-    padding: 24px 0;
+    padding: 24px 0 0;
     color: #444;
 }
 
@@ -119,7 +120,7 @@ main {
 }
 
 #pagination .page_number {
-    padding: 24px 40px;
+    padding: 0 40px;
 }
 
 #category:after {
@@ -141,13 +142,13 @@ main {
     clear: both;
     background: #2d2d2d;
     font-size: 13px;
-    line-height: 27px;
+    line-height: 28px;
     font-weight: bold;
     color: #fff;
     text-decoration: none;
-    display: block;
-    padding: 1px 10px;
+    padding: 1px 24px;
     float: left;
+    margin-left: -15px;
 }
 
 #category ul li a {
@@ -179,5 +180,5 @@ footer {
     text-align: center;
     font-size: small;
     color: #999;
-    margin: 0 0 24px;
+    margin: 24px 0;
 }
