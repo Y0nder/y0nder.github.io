@@ -55,6 +55,11 @@ nav ul li ul li {
     display: block;
 }
 
+nav ul li ul li a {
+    line-height: 28px;
+    padding: 1px 10px;
+}
+
 nav ul li ul {
     background: #2d2d2d;
     display: none;
@@ -85,7 +90,7 @@ main {
     border-top: 1px dashed #eee;
 }
 
-#home ul li a {
+#home ul li > a {
     color: #222;
     float: left;
     font-size: medium;
@@ -195,6 +200,10 @@ article .date {
 
 article p {
     text-indent: 2em;
+}
+
+article p img {
+    margin-left: -2em;
 }
 
 article blockquote {
