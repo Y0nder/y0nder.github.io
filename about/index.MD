@@ -2,7 +2,6 @@
 layout: post
 current: about
 title: About Me
-date: 2013-05-31 23:08
 ---
 类似的激发了思考的激发了空间的萨法律色肯德基菲拉斯肯德基法拉快速jfd
 

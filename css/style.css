@@ -4,30 +4,30 @@ body {
     background: url('/res/bg.jpg');
 }
 
-nav {
+#nav {
     background: #2d2d2d;
     border-bottom: 1px solid #000;
 }
 
-nav:after {
+#nav:after {
     content: "";
     clear: both;
     display: block;
 }
 
-nav ul {
+#nav ul {
     margin: 0;
     padding: 0 10px;
     float: left;
 }
 
-nav ul li {
+#nav ul li {
     float: left;
     position: relative;
     list-style: none;
 }
 
-nav ul li a {
+#nav ul li a {
     font-size: 13px;
     line-height: 27px;
     font-weight: bold;
@@ -37,37 +37,37 @@ nav ul li a {
     padding: 2px 10px 0;
 }
 
-nav .current {
+#nav .current {
     color: #fff;
 }
 
 
-nav ul li:hover > ul {
+#nav ul li:hover > ul {
     display: block;
 }
 
-nav ul li a:hover {
+#nav ul li a:hover {
     color: #fff;
 }
 
-nav ul li ul li {
+#nav ul li ul li {
     float: none;
     display: block;
 }
 
-nav ul li ul li a {
+#nav ul li ul li a {
     line-height: 28px;
     padding: 1px 10px;
 }
 
-nav ul li ul {
+#nav ul li ul {
     background: #2d2d2d;
     display: none;
     padding: 0;
     position: absolute;
 }
 
-main {
+#wrapper {
     display: block;
     word-wrap: break-word;
     width: 960px;
@@ -182,44 +182,44 @@ main {
     margin: 12px 24px;
 }
 
-article {
+#article {
     padding: 0 24px;
 }
 
-article .title {
+#article .title {
     font-size: 240%;
     text-align: center;
 }
 
-article .date {
+#article .date {
     font-style: italic;
     color: #222;
     text-align: center;
     text-indent: 0;
 }
 
-article p {
+#article p {
     text-indent: 2em;
 }
 
-article p img {
+#article p img {
     margin-left: -2em;
 }
 
-article blockquote {
+#article blockquote {
     font-style: italic;
 }
 
-article img {
+#article img {
     max-width: 100%;
 }
 
-article pre {
+#article pre {
     margin: 0;
     padding: 10px;
 }
 
-footer {
+#footer {
     text-align: center;
     font-size: small;
     color: #999;

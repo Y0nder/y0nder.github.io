@@ -7,16 +7,16 @@
         <title>{% if page.title %}{{ page.title }} · {% endif %}{{ site.name }}</title>
     </head>
     <body>
-        <header>
-        {% include header.html %}
-        </header>
+        <div id="header">
+            {% include header.html %}
+        </div>
 
-        <main>
-        {{ content }}
-        </main>
+        <div id="wrapper">
+            {{ content }}
+        </div>
 
-        <footer>
-        {% include footer.html %}
-        </footer>
+        <div id="footer">
+            {% include footer.html %}
+        </div>
     </body>
 </html>
