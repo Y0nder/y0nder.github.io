@@ -1,4 +1,4 @@
 paginate: 10
 name: Yoncise
-permalink: /blog/:category/:year/:month/:day/:title.html
-pagination_path: blog/page:num
+permalink: /blog/:categories/:year/:month/:day/:title.html
+paginate_path: 'blog/page:num'
